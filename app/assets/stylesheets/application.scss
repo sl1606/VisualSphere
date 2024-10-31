@@ -1,0 +1,13 @@
+@import "bootstrap";
+@import "select2";
+@import "chosen";
+
+.select2-container {
+  z-index: 9999;
+  width: 100% !important;
+}
+
+a {
+  color: #6c757d;
+  text-decoration: none;
+}
