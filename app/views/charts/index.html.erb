@@ -1,0 +1,262 @@
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<% end %>
+<style>
+  .chosen-container {
+    width: 100% !important;
+  }
+</style>
+<div class="mb-3 mt-2 text-muted">
+  <%= link_to root_path do %>
+    <svg t="1686460390424" style="margin-top: -5px;" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2355" width="20" height="20"><path d="M946.5 505L560.1 118.8l-25.9-25.9c-12.3-12.2-32.1-12.2-44.4 0L77.5 505c-12.3 12.3-18.9 28.6-18.8 46 0.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8 12.1-12.1 18.7-28.2 18.7-45.3 0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z m217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z" p-id="2356" fill="#6c757d"></path></svg>
+  <% end %>
+  /
+  <%= link_to "Connection", root_path %>
+  /
+  <%= link_to "Dashboard", db_connection_path(@db_connection) %>
+  /
+  <%= link_to "Chart", request.url %>
+</div>
+
+<!-- <span style="font-size: 20px;"><%#= @dashboard.name %></span>
+<span style="font-size: 25px;margin-left: 10px;margin-right: 10px;"> | </span> -->
+<button type="button" class="btn btn-primary create_btn" data-bs-toggle="modal" data-bs-target="#createModal">
+  Create Chart
+</button>
+
+<div class="btn-group" style="float: right;">
+  <%= link_to 'Render', dashboard_path(@dashboard, db_connection_id: @db_connection.id, dashboard_name: @dashboard.name, dashboard_id: @dashboard.id), class: 'btn btn-outline-primary', dashboard_id: @dashboard.id %>
+  <!-- <%= link_to 'Stat', "#", class: 'btn btn-outline-primary' %> -->
+  <%= link_to 'Back', "/db_connections/#{params[:db_connection_id]}", class: 'btn btn-outline-primary', style: 'float: right' %>
+</div>
+
+<div class="row mt-3">
+  <div class="col-sm-12">
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 12%">Chart List</th>
+          <th style="width: 15%">Name</th>
+          <th style="width: 17%">Table</th>
+          <th style="width: 22%">Variable(s)</th>
+          <th style="width: 22%">Chart</th>
+          <th style="width: 16%">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @charts.each_with_index do |chart, index| %>
+          <div class="modal fade" id="editModal<%= chart.id %>" tabindex="-1" aria-labelledby="exampleModalLabel<%= chart.id %>" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="exampleModalLabel<%= chart.id %>">Edit Chart</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                  <div class="modal-body">
+                    <%= form_with model: chart, local: true do |f|  %>
+                      <input type="hidden" class="form-control" name="dashboard_id" value="<%= @dashboard.id %>">
+                      <input type="hidden" class="form-control" name="db_connection_id" value="<%= @dashboard.db_connection.id %>">
+                      <div class="mb-3">
+                        <label for="chart-name" class="form-label">Name of the Chart</label>
+                        <%= f.text_field :name, class: "form-control" %>
+                      </div>
+                      <!-- <div class="mb-3">
+                        <label for="chart-description" class="form-label">Description</label>
+                        <%= f.text_area :description, class: "form-control" %>
+                      </div> -->
+                      <div class="mb-3">
+                        <label for="chart-variables" class="form-label">Table</label>
+                        <%= f.select :table_name, @tables, {}, class: "form-control table-select" %>
+                      </div>
+                      <div class="mb-3">
+                        <label for="chart-type" class="form-label">Number of Variables</label>
+                        <%= f.select :number, [1,2,3], {}, class: "form-select chart-number" %>
+                      </div>
+                      <div class="mb-3 vx" style="display: none;">
+                        <label for="chart-type" class="form-label">Variable X</label>
+                        <%= f.select :variable_x, chart.get_variables, {}, class: "form-select variable" %>
+                      </div>
+                      <div class="mb-3 vy" style="display: none;">
+                        <label for="chart-type" class="form-label">Variable Y</label>
+                        <%= f.select :variable_y, chart.get_variables, {}, class: "form-select variable" %>
+                      </div>
+                      <div class="mb-3 vz" style="display: none;">
+                        <label for="chart-type" class="form-label">Variable Z</label>
+                        <%= f.select :variable_z, chart.get_variables, {}, class: "form-select variable" %>
+                      </div>
+                      <div class="mb-3">
+                        <label for="chart-type" class="form-label">Chart</label>
+                        <%= f.select :chart_type, chart.get_chart_type, {}, class: "form-control chart-type" %>
+                      </div>
+
+                  </div>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <tr>
+            <td>Chart <%= index + 1 %></td>
+            <td><%= chart.name %></td>
+            <td><%= chart.table_name %></td>
+            <td><%= chart.variables.join(', ') %></td>
+            <td><%= chart.chart_type %></td>
+            <td>
+              <button type="button" class="btn btn-success edit_btn" chart_id="<%= chart.id %>" data-bs-toggle="modal" data-bs-target="#editModal<%= chart.id %>">
+                Edit
+              </button>
+              <%= link_to 'Delete', chart, method: :delete, data: { confirm: "Are you sure to delete?" }, class: 'btn btn-outline-danger' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Create Chart</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+        <div class="modal-body">
+          <%= form_with model: Chart.new, local: true do |f|  %>
+            <input type="hidden" class="form-control" name="dashboard_id" value="<%= @dashboard.id %>">
+            <input type="hidden" class="form-control" name="db_connection_id" value="<%= @dashboard.db_connection.id %>">
+            <div class="mb-3">
+              <label for="chart-name" class="form-label">Name of the Chart</label>
+              <%= f.text_field :name, class: "form-control" %>
+            </div>
+            <div class="mb-3">
+              <label for="chart-description" class="form-label">Description</label>
+              <%= f.text_area :description, class: "form-control" %>
+            </div>
+            <div class="mb-3">
+              <label for="chart-variables" class="form-label">Table</label>
+              <%= f.select :table_name, @tables, {}, class: "form-control table-select" %>
+            </div>
+            <div class="mb-3">
+              <label for="chart-type" class="form-label">Number of Variables</label>
+              <%= f.select :number, [1,2,3], {}, class: "form-select chart-number" %>
+            </div>
+            <div class="mb-3 vx" style="display: none;">
+              <label for="chart-type" class="form-label">Variable X</label>
+              <%= f.select :variable_x, [], {}, class: "form-select variable" %>
+            </div>
+            <div class="mb-3 vy" style="display: none;">
+              <label for="chart-type" class="form-label">Variable Y</label>
+              <%= f.select :variable_y, [], {}, class: "form-select variable" %>
+            </div>
+            <div class="mb-3 vz" style="display: none;">
+              <label for="chart-type" class="form-label">Variable Z</label>
+              <%= f.select :variable_z, [], {}, class: "form-select variable" %>
+            </div>
+            <div class="mb-3">
+              <label for="chart-type" class="form-label">Chart</label>
+              <%= f.select :chart_type, ["Box Plot", "Histogram", "Violin Plot"], {}, class: "form-control chart-type" %>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(".chart-number").each(function() {
+    calc_chart_number($(this))
+  });
+
+  $(".chart-number").change(function(){
+    calc_chart_number($(this))
+  })
+
+  function calc_chart_number(doc){
+    var chart_number = doc.val();
+    if(chart_number == 1){
+      doc.parent().parent().find(".vx").show();
+      doc.parent().parent().find(".vy").hide();
+      doc.parent().parent().find(".vz").hide();
+    }else if(chart_number == 2){
+      doc.parent().parent().find(".vx").show();
+      doc.parent().parent().find(".vy").show();
+      doc.parent().parent().find(".vz").hide();
+    }else if(chart_number == 3){
+      doc.parent().parent().find(".vx").show();
+      doc.parent().parent().find(".vy").show();
+      doc.parent().parent().find(".vz").show();
+    }
+
+  }
+
+  $('.table-select').chosen();
+  $('select[name="chart[variable_x]"]').chosen();
+  $('select[name="chart[variable_y]"]').chosen();
+  $('select[name="chart[variable_z]"]').chosen();
+
+  $(document).ready(function() {
+    $('.table-select').on('change', function() {
+      var table = $(this).val();
+      console.log(table);
+      $.ajax({
+        url: '/collections/get_variables',
+        type: 'GET',
+        data: { table: table, db_connection_id: '<%= params[:db_connection_id] %>' },
+        success: function(data) {
+          console.log(data);
+          var variables = data;
+          var options = '';
+          for (var i = 0; i < variables.length; i++) {
+            options += '<option value="' + variables[i] + '">' + variables[i] + '</option>';
+          }
+          $('.table-select').parent().parent().find('select[name="chart[variable_x]"]').html(options);
+          $('.table-select').parent().parent().find('select[name="chart[variable_y]"]').html(options);
+          $('.table-select').parent().parent().find('select[name="chart[variable_z]"]').html(options);
+          $('.table-select').parent().parent().find('select[name="chart[variable_x]"]').trigger("chosen:updated");
+          $('.table-select').parent().parent().find('select[name="chart[variable_y]"]').trigger("chosen:updated");
+          $('.table-select').parent().parent().find('select[name="chart[variable_z]"]').trigger("chosen:updated");
+        }
+      });
+    });
+  });
+
+  $('.variable').change(function(){
+    var selectElement = $(this).parent().parent().find(".chart-type");
+
+    // 清空所有选项
+    selectElement.empty();
+
+    doc = $(this).parent().parent()
+
+    $.ajax({
+      url: '/charts/get_chart_type',
+      type: 'GET',
+      data: { variable_x: doc.find('select[name="chart[variable_x]"]').val(),
+        variable_y: doc.find('select[name="chart[variable_y]"]').val(),variable_z: doc.find('select[name="chart[variable_z]"]').val(),
+        db_connection_id: '<%= params[:db_connection_id] %>', table_name: doc.find('select[name="chart[table_name]"]').val(),
+        number: doc.find('select[name="chart[number]"]').val(), dashboard_id: '<%= params[:dashboard_id] %>' },
+      success: function(data) {
+        console.log(data);
+        var chart_types = data;
+        var options = '';
+        for (var i = 0; i < chart_types.length; i++) {
+          options += '<option value="' + chart_types[i] + '">' + chart_types[i] + '</option>';
+        }
+        selectElement.html(options);
+      }
+    })
+  })
+
+</script>

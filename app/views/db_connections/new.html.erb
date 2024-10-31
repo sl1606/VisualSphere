@@ -1,0 +1,60 @@
+<div class="container">
+  <div class="row">
+    <% if notice.present? %>
+      <div class="alert alert-success" role="alert">
+        <%= notice %>
+      </div>
+    <% end %>
+    <div class="col-md-4 offset-4">
+      <div class="text-center mt-2">
+        <h1>DB Connection</h1>
+      </div>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+          <%= form_with model: @db_connection, local: true do |f| %>
+            <% if @db_connection.errors.any? %>
+              <div id='error_explanation'>
+                <h2><%= pluralize(@db_connection.errors.count, 'error') %> prohibited this @db_connection from being saved:</h2>
+                  <ul>
+                    <% @db_connection.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+              </div>
+            <% end %>
+            <div class="mb-3">
+              <%= f.label :database_type, "Database Type*", class: 'form-label' %>
+              <%= f.select :database_type, [['MongoDB', 'mongodb'], ['MySQL', 'mysql']], {}, class: 'form-select', required: true %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :ip, "IP*", class: 'form-label' %>
+              <%= f.text_field :ip, class: 'form-control', required: true %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :port, "Port*", class: 'form-label' %>
+              <%= f.number_field :port, class: 'form-control', required: true %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :database, "Database*", class: 'form-label' %>
+              <%= f.text_field :database, class: 'form-control', required: true %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :username, "User*", class: 'form-label' %>
+              <%= f.text_field :username, class: 'form-control', autocomplete: "off" %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :password, "Password*", class: 'form-label' %>
+              <%= f.password_field :password, class: 'form-control', autocomplete: "new-password" %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :csv, "Data Dictionary", class: 'form-label' %>
+              <%= link_to "example.csv", "/visual_sphere/codebook.csv", style: "float: right" %>
+              <%= f.file_field :csv, class: 'form-control' %>
+            </div>
+            <%= f.submit :Connect, class: 'form-control btn btn-primary' %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

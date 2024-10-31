@@ -1,0 +1,159 @@
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<% end %>
+
+<!-- new modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">Create a New Dashboard</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with model: Dashboard.new, local: true do |f| %>
+        <div class="modal-body">
+          <div class="card-body">
+            <%= f.hidden_field :db_connection_id, value: params[:id] %>
+            <div class="mb-3">
+              <%= f.label :name, "Name of the dashboard", class: 'form-label', style: "font-weight: bold;" %>
+              <%= f.text_field :name, class: 'form-control dashboard-name' %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :description, "Description", class: 'form-label', style: "font-weight: bold;" %>
+              <%= f.text_area :description, class: 'form-control' %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success create-dashboard">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="mb-3 mt-2 text-muted">
+    <%= link_to root_path do %>
+      <svg t="1686460390424" style="margin-top: -5px;" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2355" width="20" height="20"><path d="M946.5 505L560.1 118.8l-25.9-25.9c-12.3-12.2-32.1-12.2-44.4 0L77.5 505c-12.3 12.3-18.9 28.6-18.8 46 0.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8 12.1-12.1 18.7-28.2 18.7-45.3 0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z m217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z" p-id="2356" fill="#6c757d"></path></svg>
+    <% end %>
+    /
+    <%= link_to "Connection", root_path %>
+    /
+    <%= link_to "Dashboard", request.url %>
+  </div>
+
+  <button type="button" class="btn btn-primary new-btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+    Create Dashboard
+  </button>
+  <table class="table table-bordered mt-3">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" style="width: 10%">List</th>
+        <th scope="col" style="width: 10%">Name</th>
+        <th scope="col" style="width: 13%">Description</th>
+        <th scope="col" style="width: 43%">Details</th>
+        <th scope="col" style="width: 27%">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @dashboards.each_with_index do |dashboard, index| %>
+        <div class="modal fade" id="staticBackdrop<%= index %>" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel<%= index %>" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <tr>
+          <th>Dashboard <%= index + 1 %></th>
+          <th><%= dashboard.name %></th>
+          <td class="table-td"><%= dashboard.description %></td>
+          <td class="table-td">
+            <span class="table-name">
+              <% dashboard.charts.each_with_index do |chart, index| %>
+                <% index += 1 %>
+                <div>Chart <%= index %>: <%= chart.chart_type %> | Table: <%= chart.table_name %> | Variable(s): <%= chart.variables.join(', ') %></div>
+              <% end %>
+            </span>
+            <!-- edit modal -->
+            <div class="modal fade edit-modal" id="editModal<%= dashboard.id %>" data-bs-backdrop="static" aria-labelledby="editLabel<%= dashboard.id %>" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editLabel<%= dashboard.id %>">Edit table and variables</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <%= form_with modal: dashboard, url: dashboard_path(dashboard), method: :patch, local: true do |f| %>
+                    <div class="modal-body">
+                      <div class="card-body">
+                        <%= f.hidden_field :db_connection_id, value: params[:id] %>
+                        <div class="mb-3">
+                          <%= f.label :name, "Name of the dashboard", class: 'form-label', style: "font-weight: bold;" %>
+                          <%= f.text_field :name, class: 'form-control dashboard-name', value: dashboard.name %>
+                        </div>
+                        <div class="mb-3">
+                          <%= f.label :description, "Description", class: 'form-label', style: "font-weight: bold;" %>
+                          <%= f.text_area :description, class: 'form-control', value: dashboard.description %>
+                        </div>
+                        <%= f.hidden_field :id, class: 'form-control', value: dashboard.id %>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-success update-dashboard" dashboard_id="<%= dashboard.id %>" >Save</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </td>
+          <!-- <td>
+            <span class="variable-names1"><%= DbVariable.where(dashboard_id: dashboard.id).map { |db_variable| "#{db_variable.name}(#{db_variable.chart_type})" }.join(', ') %></span>
+            <span class="variable-names" style="display: none;"><%= DbVariable.where(dashboard_id: dashboard.id).pluck(:name)&.join(', ') %></span>
+          </td> -->
+          <td>
+            <%= link_to 'Render', dashboard_path(dashboard, db_connection_id: @db_connection.id, dashboard_name: dashboard.name, dashboard_id: dashboard.id), class: 'btn btn-success btn-connect', dashboard_id: dashboard.id %>
+          <!--  <%= link_to 'Viz', "#", class: 'btn btn-primary btn-connect', dashboard_id: dashboard.id %> -->
+          <!-- <%= link_to 'Stat', "#", class: 'btn btn-success btn-connect', dashboard_id: dashboard.id %> -->
+            <%= link_to "Chart", "/charts?db_connection_id=#{@db_connection.id}&dashboard_id=#{dashboard.id}", class: "btn btn-warning text-light btn-charts" %>
+            <button type="button" class="btn btn-secondary text-light edit-dashboard" data-bs-toggle="modal" data-bs-target="#editModal<%= dashboard.id %>" db_connection_id="<%= @db_connection.id %>" dashboard_id="<%= dashboard.id %>">Edit</button>
+            <!-- <%= button_tag 'Preview', class: "btn btn-secondary btn-preview", "data-bs-toggle": "modal", "data-bs-target": "#staticBackdrop#{index}" %> -->
+            <%= link_to 'Delete', dashboard_path(dashboard, db_connection_id: @db_connection.id), method: :delete, data: { confirm: "Are you sure to delete?" }, class: 'btn btn-outline-danger delete-connection' %>
+          </td>
+        </tr>
+        <% margin = index == 0 ? 110 : 110 + index * 55 %>
+        <div id="demo<%= dashboard.id %>" class="collapse" style="position: absolute;position: absolute;margin-top: <%= margin %>px;margin-left: 800px;">
+          <ul class="list-group">
+            <li class="list-group-item" style="background:#dee2e6">
+              <div style="display: flex;">
+                <div style="width: 200px">Variable</div>
+                <div style="width: 200px">Chart</div>
+              </div>
+            </li>
+            <% DbVariable.where(dashboard_id: dashboard.id).each do |db_variable| %>
+              <li class="list-group-item">
+                <div style="display: flex;">
+                  <div style="width: 200px"><%= db_variable.name %></div>
+                  <div style="width: 200px">
+                    <select class="chart-type-select" db_variable_id="<%= db_variable.id %>">
+                      <% VariableAvailableChart.find_by(db_variable_id: db_variable.id)&.chart_type&.split(',')&.each do |variable_available| %>
+                        <option value="<%= variable_available %>" <%= 'selected' if variable_available == db_variable.chart_type %>><%= variable_available %></option>
+                      <% end %>
+                    </select>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </tbody>
+  </table>
+</div>

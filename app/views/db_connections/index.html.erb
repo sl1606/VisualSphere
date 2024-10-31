@@ -1,0 +1,122 @@
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<% end %>
+
+<div class="mb-2 mt-2 text-muted">
+  <%= link_to root_path do %>
+    <svg t="1686460390424" style="margin-top: -5px;" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2355" width="20" height="20"><path d="M946.5 505L560.1 118.8l-25.9-25.9c-12.3-12.2-32.1-12.2-44.4 0L77.5 505c-12.3 12.3-18.9 28.6-18.8 46 0.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8 12.1-12.1 18.7-28.2 18.7-45.3 0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z m217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z" p-id="2356" fill="#6c757d"></path></svg>
+  <% end %>
+  /
+  <%= link_to "Connection", root_path %>
+</div>
+<%= link_to "New Connection", new_db_connection_path, class: 'btn btn-primary' %>
+
+<div class="row mt-3">
+  <div class="col-sm-12">
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 26%">Database Name</th>
+          <!-- <th>IP</th> -->
+          <!-- <th>Port</th> -->
+          <th style="width: 14%">Database Type</th>
+          <!-- <th>Database Type</th> -->
+          <th style="width: 18%">User</th>
+          <!-- <th>Password</th>
+          <th>Data Dictionary</th> -->
+          <th style="width: 22%">Data Dictionary</th>
+          <th style="width: 19%">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @db_connections.each_with_index do |db_connection, index| %>
+          <div class="modal fade" id="editModal<%= db_connection.id %>" data-bs-backdrop="static" aria-labelledby="editLabel<%= db_connection.id %>" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editLabel<%= db_connection.id %>">Edit connection</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <%= form_with model: db_connection, local: true do |f| %>
+                  <div class="modal-body">
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <%= f.label :database_type, "Database Type*", class: 'form-label' %>
+                        <%= f.select :database_type, [['MongoDB', 'MongoDB'], ['MySQL', 'MySQL']], {}, class: 'form-select', required: true %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :ip, "IP*", class: 'form-label' %>
+                        <%= f.text_field :ip, class: 'form-control', required: true %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :port, "Port*", class: 'form-label' %>
+                        <%= f.number_field :port, class: 'form-control', required: true %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :database, "Database*", class: 'form-label' %>
+                        <%= f.text_field :database, class: 'form-control', required: true %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :username, "User*", class: 'form-label' %>
+                        <%= f.text_field :username, class: 'form-control', autocomplete: "off" %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :password, "Password*", class: 'form-label' %>
+                        <%= f.text_field :password, class: 'form-control', autocomplete: "new-password" %>
+                      </div>
+                      <div class="mb-3">
+                        <%= f.label :csv, "Data Dictionary:", class: 'form-label' %>
+                        <%= link_to "example.csv", "/visual_sphere/codebook.csv", style: "float: right" %>
+                        <span class="csv-name">
+                          <%= f.object.csv.remove(db_connection.try(:csv).match(/(.*\/)*([^.]+).*/i)[1]) if f.object.csv.present? rescue '' %>
+                        </span>
+                        <span class="badge text-bg-danger delete-csv">delete</span>
+                        <%= f.file_field :csv, class: 'form-control' %>
+                      </div>
+                      <%= f.hidden_field :csv_reset, class: 'csv-reset' %>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-success" >Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <tr>
+            <td><%= db_connection.database %></td>
+            <!-- <td><%= db_connection.ip %></td>
+            <td><%= db_connection.port %></td> -->
+            <td><%= db_connection.database_type %></td>
+            <!-- <td><%= db_connection.database_type %></td> -->
+            <td><%= db_connection.username %></td>
+            <!-- <td>********</td> -->
+            <td><%= db_connection.try(:csv) ? db_connection.try(:csv).remove(db_connection.try(:csv).match(/(.*\/)*([^.]+).*/i)[1]) : '' %></td>
+            <td>
+              <%= link_to 'Connect', db_connection_path(db_connection), class: "btn btn-primary" %>
+              <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal<%= db_connection.id %>">
+                Edit
+              </button>
+              <%= link_to 'Delete', db_connection_path(db_connection), method: :delete, data: { confirm: "Are you sure to delete?" }, class: 'btn btn-outline-danger' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  $('.card-header').click(function(){
+    $(this).parent().find('.card-body').toggle();
+  });
+
+  $('.delete-csv').click(function(){
+    $(this).parent().find('.csv-name').html('');
+    $(this).parent().find('.csv').val('');
+    $(this).parent().parent().find('.csv-reset').val('true');
+  });
+</script>

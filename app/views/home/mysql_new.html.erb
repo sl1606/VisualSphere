@@ -1,0 +1,166 @@
+<% if notice.present? %>
+  <div class="alert alert-success" role="alert">
+    <%= notice %>
+  </div>
+<% end %>
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">Please select the table and variables</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: mysql_create_home_index_path, local: true do |f| %>
+        <div class="modal-body">
+          <div class="card-body">
+            <%= f.hidden_field :database_type, value: 'mysql' %>
+            <%= f.hidden_field :db_ip, value: params[:db_ip] %>
+            <%= f.hidden_field :db_port, value: params[:db_port] %>
+            <%= f.hidden_field :db_database, value: params[:db_database] %>
+            <%= f.hidden_field :db_user, value: params[:db_user] %>
+            <%= f.hidden_field :db_password, value: params[:db_password] %>
+
+            <div class="mb-3">
+              <%= f.label :table, "Table", class: 'form-label', style: "font-weight: bold;" %>
+              <%= f.select :table, @tables, {}, class: 'form-select table-select select-table' %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :selected_variables, "Variables", class: 'form-label', style: "font-weight: bold;" %>
+              <%= f.select :selected_variables, [], {}, class: 'form-control select2_variables', multiple: true %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <%= f.submit :Save, class: 'btn btn-success' %>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+    Create a New Dashboard
+  </button>
+  <div class="row mt-3">
+    <% @db_connections.each_with_index do |db_connection, index| %>
+      <div class="col-md-3">
+        <div class="card" style="height: 300px;">
+          <div class="card-header">
+            Dashboard<%= index + 1 %>
+          </div>
+          <div class="card-body">
+            <p class="card-title" style="font-weight: bold;">Table</p>
+            <p class="card-text">
+              <span class="table_<%= db_connection.id %>"><%= db_connection.table %></span>
+              <%= select_tag :table, options_for_select(@tables, db_connection.table), class: "form-control select2-table table-select selected_table_#{db_connection.id}", style: 'display: none' %>
+            </p>
+            <div class="mb-3">
+              <p class="card-title" style="font-weight: bold;">Variables</p>
+              <p class="card-text">
+                <span class="varibles_<%= db_connection.id %>"><%= db_connection.selected_variables.reject(&:empty?).join(", ") %></span>
+                <%= select_tag :selected_variables, [], class: "form-control selected_variable_#{db_connection.id} select2_variables", style: 'display: none;', multiple: true %>
+              </p>
+            </div>
+          </div>
+          <div class="card-footer text-center">
+            <%= link_to 'Connect', success_home_index_path(db_connection_id: db_connection.id, dashboard_name: index + 1), class: 'btn btn-success btn-connect' %>
+            <%= link_to 'Save', 'javascript:;', class: 'btn btn-success save-connection', style: 'display: none;' %>
+            <%= link_to 'Edit', 'javascript:;', class: 'btn btn-primary edit-connection', db_connection_id: db_connection.id, table: db_connection.table %>
+            <%= link_to 'Delete', db_connection_path(db_connection), method: :delete, data: { confirm: "Are you sure to delete?" }, class: 'btn btn-outline-danger delete-connection' %>
+            <%= link_to 'Cancel', 'javascript:;', class: 'btn btn-secondary cancel-edit-connection', style: 'display: none;' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>
+
+<script>
+  $(".select-table").select2({
+    dropdownParent: $('#staticBackdrop')
+  });
+  $( "#selected_variables" ).select2();
+  $(document).ready(function() {
+    $('.table-select').on('change', function() {
+      var table = $(this).val();
+      $.ajax({
+        url: '/home/get_variables',
+        type: 'GET',
+        data: { table: table },
+        success: function(data) {
+          var variables = data;
+          var options = '';
+          for (var i = 0; i < variables.length; i++) {
+            options += '<option value="' + variables[i] + '">' + variables[i] + '</option>';
+          }
+          $('.table-select').parent().parent().find('select[name="selected_variables[]"]').html(options);
+        }
+      });
+    });
+  });
+
+  $('.edit-connection').click(function() {
+    var db_connection_id = $(this).attr('db_connection_id');
+    $('.selected_variable_' + db_connection_id).show();
+    $('.varibles_' + db_connection_id).hide();
+    $('.table_' + db_connection_id).hide();
+    $('.selected_variable_' + db_connection_id).parent().parent().parent().parent().find('.btn-connect').hide();
+    $(this).hide();
+    $(this).parent().find('.save-connection').show();
+    $(this).parent().find('.cancel-edit-connection').show();
+    $(this).parent().find('.delete-connection').hide();
+    $(this).parent().parent().find(".select2-table").show()
+    var table = $(this).attr('table');
+    var selected_variables = $(".varibles_" + db_connection_id).text().split(", ");
+
+    $.ajax({
+      url: '/home/get_variables',
+      type: 'GET',
+      data: { table: table },
+      success: function(data) {
+        var all_variables = data;
+        var options = '';
+        for (var i = 0; i < all_variables.length; i++) {
+          if(selected_variables.includes(all_variables[i])){
+            options += '<option value="' + all_variables[i] + '" selected>' + all_variables[i] + '</option>';
+          }else{
+            options += '<option value="' + all_variables[i] + '">' + all_variables[i] + '</option>';
+          }
+        }
+        $('.selected_variable_' + db_connection_id).html(options);
+      }
+    });
+    $(this).parent().parent().find(".select2_variables").select2({});
+    $(this).parent().parent().find(".select2-table").select2();
+  });
+
+  $('.save-connection').click(function() {
+    var db_connection_id = $(this).parent().parent().find('.edit-connection').attr('db_connection_id');
+    var selected_variables = $('.selected_variable_' + db_connection_id).val();
+    var table = $('.selected_table_' + db_connection_id).val();
+    $.ajax({
+      url: '/home/update_variables',
+      type: 'POST',
+      data: { db_connection_id: db_connection_id, selected_variables: selected_variables, table: table },
+      success: function(data) {
+        $(".varibles_" + db_connection_id).text(data.variables);
+        $(".varibles_" + db_connection_id).show();
+        $('.selected_variable_' + db_connection_id).hide();
+        $('.table_' + db_connection_id).text(data.table);
+        $('.table_' + db_connection_id).show();
+        $('.selected_variable_' + db_connection_id).parent().parent().parent().parent().find('.edit-connection').show();
+        $('.selected_variable_' + db_connection_id).parent().parent().parent().parent().find('.save-connection').hide();
+        $('.selected_variable_' + db_connection_id).parent().parent().parent().parent().find('.btn-connect').show();
+      }
+    });
+    $(".select2-container").hide();
+    window.location.reload();
+  });
+
+  $('.cancel-edit-connection').click(function() {
+    window.location.reload();
+  });
+
+</script>
