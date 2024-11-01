@@ -3,6 +3,7 @@
 ## Introduction
 VisualSphere is a web-based interactive visualization system that directly interfaces with clinical research data repositories, streamlining and simplifying the visualization workflow.
 
+The workflow of VisualSphere:
 ![shiny](https://github.com/user-attachments/assets/5dbc75c3-8a4c-4bf8-90bf-678529fdd0ba)
 
 ## Citation
